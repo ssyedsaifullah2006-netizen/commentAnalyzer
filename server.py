@@ -226,6 +226,8 @@ def _build_index(comments: list, session_id: str, session: dict):
         session['rag_status'] = 'ready'
         session['rag_error'] = None
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         logger.error(f"Background index error: {e}")
         session['rag_status'] = 'error'
         session['rag_error'] = str(e)

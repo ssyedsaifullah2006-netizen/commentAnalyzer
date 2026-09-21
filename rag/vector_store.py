@@ -20,8 +20,13 @@ def _get_gemini_client():
     return _gemini_client
 
 
-class GeminiEmbeddingFunction:
-    """Embedding function using Gemini text-embedding-004 with batching and retry."""
+from chromadb.api.types import EmbeddingFunction
+
+class GeminiEmbeddingFunction(EmbeddingFunction):
+    """Embedding function using Gemini with batching and retry."""
+    
+    def name(self) -> str:
+        return "GeminiEmbeddingFunction"
 
     def __call__(self, input: list[str]) -> list[list[float]]:
         import time

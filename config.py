@@ -36,7 +36,7 @@ EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 #   "gemini-2.5-flash"       — newest flash,       FREE: 10 RPM (if available)
 #
 # If you're hitting daily limits, switch to "gemini-2.0-flash" or "gemini-2.0-flash-lite"
-GEMINI_MODEL = "gemini-3.7-flash"
+GEMINI_MODEL = "gemini-3.5-flash-lite"
 
 # Gemini embedding model used for RAG vector search.
 # Available on your API key:
