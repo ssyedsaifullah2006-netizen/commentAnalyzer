@@ -88,9 +88,13 @@ class VectorStore:
         metadatas = []
 
         for i, c in enumerate(comments):
+            text = c.get('text', '').strip()
+            if not text:
+                continue
+                
             doc_id = str(c.get('id', f"doc_{i}"))
             ids.append(doc_id)
-            documents.append(c.get('text', ''))
+            documents.append(text)
 
             meta = {}
             if 'metadata' in c and isinstance(c['metadata'], dict):
@@ -105,6 +109,9 @@ class VectorStore:
             if not meta:
                 meta = {"source": "comment"}
             metadatas.append(meta)
+
+        if not ids:
+            return
 
         self.collection.upsert(ids=ids, documents=documents, metadatas=metadatas)
 
