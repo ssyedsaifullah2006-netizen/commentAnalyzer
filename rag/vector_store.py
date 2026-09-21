@@ -28,12 +28,14 @@ class GeminiEmbeddingFunction:
         client = _get_gemini_client()
         all_embeddings = []
 
-        # Batch in chunks of 50 (API supports up to 100)
-        batch_size = 50
+        # Batch in chunks of 100 (API maximum)
+        batch_size = 100
         for i in range(0, len(input), batch_size):
             batch = input[i:i + batch_size]
             embs = self._embed_with_retry(client, batch)
             all_embeddings.extend(embs)
+            if i + batch_size < len(input):
+                time.sleep(1.0)
 
         return all_embeddings
 

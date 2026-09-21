@@ -47,7 +47,7 @@ GEMINI_EMBEDDING_MODEL = "gemini-embedding-001"
 
 # ─── Processing Settings ────────────────────────────────────────
 MAX_COMMENTS_DEFAULT = 500
-MAX_ANALYSIS_COMMENTS = 500
+MAX_ANALYSIS_COMMENTS = 150
 RAG_TOP_K = 10
 SUMMARIZATION_CHUNK_SIZE = 200
 BATCH_SIZE = 16
