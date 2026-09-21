@@ -35,7 +35,7 @@ class YouTubeFetcher(BaseFetcher):
         try:
             while len(comments) < max_comments:
                 request = self.youtube.commentThreads().list(
-                    part="snippet,replies",
+                    part="snippet",
                     videoId=video_id,
                     maxResults=min(100, max_comments - len(comments)),
                     pageToken=next_page_token,

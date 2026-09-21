@@ -110,23 +110,14 @@ async function run() {
     }
   }, 300);
 
-  // Stage transitions
-  setTimeout(() => {
-    targetPct = 40;
-    $('progress-label').textContent = 'Analyzing with Gemini...';
-    $('loading-msg').textContent = 'Analyzing with Gemini...';
-    $('loading-sub').textContent = 'Running sentiment analysis, topic discovery, and summary generation...';
-  }, 3000);
-
-  setTimeout(() => {
-    targetPct = 70;
-  }, 10000);
-
-  setTimeout(() => {
-    targetPct = 85;
-    $('progress-label').textContent = 'Almost done...';
-    $('loading-msg').textContent = 'Finalizing analysis...';
-  }, 20000);
+  // Simple fast progress until real completion
+  let currentPct = 5;
+  const tick = setInterval(() => {
+    if (currentPct < 90) {
+      currentPct += (90 - currentPct) * 0.1;
+      $('progress-bar').style.width = currentPct + '%';
+    }
+  }, 300);
 
   try {
     const r = await api('/api/fetch', { method: 'POST', body: { url, max_comments: maxComments, session_id: S.sid } });
@@ -276,7 +267,7 @@ function render(a, questions) {
     const descs = sorted.map(t => t.description || '');
 
     c.innerHTML += `<div class="section"><h3>🏷️ Topics Discovered</h3>
-      <div class="topics-list">${a.topics.sort((a,b) => b.count - a.count).map(t =>
+      <div class="topics-list">${[...a.topics].sort((a,b) => b.count - a.count).map(t =>
         `<div class="topic-item"><span class="topic-name">${esc(t.name)}</span><span class="topic-count">${t.count}</span><span class="topic-desc">${esc(t.description)}</span></div>`
       ).join('')}</div>
       <div id="${bid}" class="chart-box" style="margin-top:12px;"></div>

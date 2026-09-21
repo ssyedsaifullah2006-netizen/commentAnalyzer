@@ -25,12 +25,15 @@ class RedditFetcher(BaseFetcher):
             
         try:
             submission = self.reddit.submission(url=url)
-            submission.comments.replace_more(limit=0)
+            
+            # Sort by top
+            submission.comment_sort = 'top'
             
             comments = []
-            all_comments = submission.comments.list()
-            
-            for comment in all_comments:
+            # We don't use replace_more or .list() here because they can pull thousands of comments.
+            for comment in submission.comments:
+                if isinstance(comment, praw.models.MoreComments):
+                    continue
                 if len(comments) >= max_comments:
                     break
                     

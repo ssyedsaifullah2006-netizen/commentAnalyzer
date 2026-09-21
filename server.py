@@ -26,7 +26,7 @@ app = FastAPI(title="Comment Intelligence API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -169,8 +169,8 @@ Be thorough and accurate. Count sentiments carefully across ALL {max_to_analyze}
         response_schema=schema
     )
 
-    # Retry logic — 5 attempts with aggressive backoff to survive 503 spikes
-    for attempt in range(5):
+    # Retry logic — 4 attempts with capped backoff
+    for attempt in range(4):
         try:
             response = client.models.generate_content(
                 model=config.GEMINI_MODEL,
@@ -184,15 +184,15 @@ Be thorough and accurate. Count sentiments carefully across ALL {max_to_analyze}
                 raise ValueError("No content in response")
             return json.loads(candidate.content.parts[0].text)
         except APIError as e:
-            if e.code in (429, 503) and attempt < 4:
-                delay = 10 * (2 ** attempt)  # 10s, 20s, 40s, 80s
-                logger.warning(f"Gemini API {e.code}, retrying in {delay}s (attempt {attempt+1}/5)...")
+            if e.code in (429, 503) and attempt < 3:
+                delay = min(5 * (attempt + 1), 15)  # 5s, 10s, 15s
+                logger.warning(f"Gemini {e.code}, retry {attempt+1}/4 in {delay}s")
                 time.sleep(delay)
             else:
                 raise
         except Exception as e:
-            if attempt < 4:
-                time.sleep(3)
+            if attempt < 3:
+                time.sleep(2)
             else:
                 raise
 
@@ -280,9 +280,11 @@ async def api_fetch(req: FetchRequest):
             "rag_ready": session.get('rag_status') == 'ready',
             "suggested_questions": ["What is the general consensus?", "Are there any complaints?", "What do people praise the most?"]
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error in fetch pipeline: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Analysis failed. Please check the URL and try again.")
 
 
 @app.get("/api/session/{session_id}")
@@ -324,7 +326,7 @@ async def api_rag_ask(req: AskRequest):
             raise HTTPException(status_code=400, detail="No data loaded. Fetch comments first.")
 
         history = session.get('chat_history', [])
-        result = qa.ask(question=req.question, n_results=20, history=history)
+        result = qa.ask(question=req.question, history=history)
 
         answer = result.get('answer', '')
         source_comments = result.get('source_comments', [])
@@ -343,14 +345,15 @@ async def api_rag_ask(req: AskRequest):
             })
 
         history.append((req.question, answer))
-        session['chat_history'] = history
+        # Bound history to last 10 exchanges
+        session['chat_history'] = history[-10:]
 
         return {"answer": answer, "sources": sources}
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error during Q&A: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to generate answer. Please try again.")
 
 
 @app.post("/api/rag/clear")
