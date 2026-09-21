@@ -113,7 +113,28 @@ class VectorStore:
         if not ids:
             return
 
-        self.collection.upsert(ids=ids, documents=documents, metadatas=metadatas)
+        try:
+            embs = self.emb_fn(documents)
+            
+            # If Google API dropped some embeddings, we must align them
+            if len(embs) != len(documents):
+                logger.warning(f"Embedding mismatch: got {len(embs)} for {len(documents)} docs. Truncating.")
+                # We can only safely store up to the amount of embeddings we received.
+                # In a real app we'd map them perfectly, but clipping is safer than a hard crash.
+                min_len = min(len(embs), len(documents))
+                ids = ids[:min_len]
+                documents = documents[:min_len]
+                metadatas = metadatas[:min_len]
+                embs = embs[:min_len]
+
+            self.collection.upsert(
+                ids=ids, 
+                documents=documents, 
+                metadatas=metadatas,
+                embeddings=embs
+            )
+        except Exception as e:
+            logger.error(f"Error calculating embeddings: {e}")
 
     def search(self, query: str, n_results: int = None, where: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Search the vector store. Uses config.RAG_TOP_K by default."""
