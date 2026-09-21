@@ -19,7 +19,7 @@ from fetchers.platform_detector import detect_platform, get_fetcher
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
-executor = ThreadPoolExecutor(max_workers=4)
+executor = ThreadPoolExecutor(max_workers=10)
 
 app = FastAPI(title="Comment Intelligence API")
 
@@ -276,7 +276,7 @@ async def api_fetch(req: FetchRequest):
             "platform": platform,
             "sample": sample,
             "analysis": analysis_results,
-            "comments_analyzed": min(len(comment_texts), 500),
+            "comments_analyzed": min(len(comment_texts), config.MAX_ANALYSIS_COMMENTS),
             "rag_ready": session.get('rag_status') == 'ready',
             "suggested_questions": ["What is the general consensus?", "Are there any complaints?", "What do people praise the most?"]
         }

@@ -42,7 +42,7 @@ class GeminiEmbeddingFunction:
         for attempt in range(max_retries):
             try:
                 res = client.models.embed_content(
-                    model='text-embedding-004',
+                    model=config.GEMINI_EMBEDDING_MODEL,
                     contents=texts
                 )
                 return [e.values for e in res.embeddings]
