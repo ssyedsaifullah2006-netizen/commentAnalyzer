@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comment Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css?v=3">
+  <script src="https://cdn.plot.ly/plotly-2.35.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+  <div id="app">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <h1 class="logo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="vertical-align: -3px; margin-right: 6px;">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Comment Intelligence
+        </h1>
+        <div class="session-info">
+          <span class="label">SESSION</span>
+          <div id="status-indicator">
+            <span class="muted">No data loaded</span>
+          </div>
+        </div>
+      </div>
+      <div class="sidebar-bottom">
+        <button id="export-btn" class="btn-ghost" style="margin-bottom:8px; display:none;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="vertical-align:-2px;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Export CSV
+        </button>
+        <button id="new-session-btn" class="btn-ghost">+ New Session</button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+
+      <!-- Top Bar -->
+      <header class="topbar">
+        <input type="text" id="url-input" class="url-input" placeholder="Paste a YouTube or Reddit URL...">
+        <select id="comment-count" class="comment-count-select" title="Max comments to fetch">
+          <option value="100">100 comments</option>
+          <option value="250">250 comments</option>
+          <option value="500" selected>500 comments</option>
+          <option value="1000">1000 comments</option>
+        </select>
+        <button id="fetch-btn" class="btn-blue">Analyze</button>
+      </header>
+
+      <!-- Progress -->
+      <div id="progress-wrap" class="progress-wrap hidden">
+        <div class="progress-track"><div id="progress-bar" class="progress-bar-fill"></div></div>
+        <span id="progress-label" class="progress-label">Fetching comments...</span>
+      </div>
+
+      <!-- Body -->
+      <div class="body">
+
+        <!-- Welcome -->
+        <div id="welcome" class="welcome">
+          <div class="welcome-inner">
+            <div class="welcome-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <h2>Paste a link to get started</h2>
+            <p>Supports YouTube and Reddit. Fetches comments, runs sentiment & topic analysis, and lets you chat with the data — all in one click.</p>
+            <div class="welcome-platforms">
+              <span class="platform-tag">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="#ef4444"><path d="M23.5 6.5a3 3 0 0 0-2.1-2.1C19.5 4 12 4 12 4s-7.5 0-9.4.4A3 3 0 0 0 .5 6.5S0 8.7 0 10.9v2.2c0 2.2.5 4.4.5 4.4a3 3 0 0 0 2.1 2.1c1.9.4 9.4.4 9.4.4s7.5 0 9.4-.4a3 3 0 0 0 2.1-2.1c.5-2 .5-4.4.5-4.4v-2.2c0-2.2-.5-4.4-.5-4.4zM9.5 15.5V8.5l6.3 3.5-6.3 3.5z"/></svg>
+                YouTube
+              </span>
+              <span class="platform-tag">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="#ff4500"><circle cx="12" cy="12" r="12"/><path d="M18.5 12a1.5 1.5 0 0 0-2.5-1.1 7.4 7.4 0 0 0-4-1.2l.7-3.2 2.2.5a1 1 0 1 0 .1-1l-2.5-.5a.5.5 0 0 0-.6.4l-.8 3.6a7.4 7.4 0 0 0-4.1 1.2A1.5 1.5 0 1 0 5.5 13a2.9 2.9 0 0 0 0 .5c0 2.5 2.9 4.5 6.5 4.5s6.5-2 6.5-4.5a2.9 2.9 0 0 0 0-.5 1.5 1.5 0 0 0 0-1zM8.5 13a1 1 0 1 1 2 0 1 1 0 0 1-2 0zm5.6 2.7a4.5 4.5 0 0 1-4.2 0 .3.3 0 0 1 .4-.4 3.8 3.8 0 0 0 3.4 0 .3.3 0 0 1 .4.4zm-.1-1.7a1 1 0 1 1 0-2 1 1 0 0 1 0 2z" fill="#fff"/></svg>
+                Reddit
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading" class="welcome hidden">
+          <div class="welcome-inner">
+            <div class="loader"><span></span><span></span><span></span></div>
+            <h2 id="loading-msg">Fetching comments...</h2>
+            <p id="loading-sub">Sit tight — analyzing sentiments, topics, and building your search index.</p>
+          </div>
+        </div>
+
+        <!-- Results -->
+        <div id="results" class="results hidden">
+
+          <!-- Left: Analysis -->
+          <section class="panel-left" id="analysis-panel">
+            <div id="meta-header"></div>
+            <div id="analysis-content"></div>
+          </section>
+
+          <!-- Right: Chat -->
+          <section class="panel-right">
+            <div class="chat-header">
+              <span class="chat-title">Chat with your data</span>
+              <button id="clear-chat-btn" class="btn-ghost-sm" title="Clear chat history">Clear</button>
+            </div>
+            <div id="rag-building-banner" class="rag-building-banner hidden">
+              <div class="loader-sm"><span></span><span></span><span></span></div>
+              <span>Building search index...</span>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+              <div id="chat-welcome" class="chat-welcome">
+                <p class="muted">Ask anything about the comments</p>
+                <div id="chips" class="chips"></div>
+              </div>
+            </div>
+            <div class="chat-bar">
+              <input type="text" id="chat-input" class="chat-input" placeholder="Ask a question..." autocomplete="off">
+              <button id="send-btn" class="btn-send" aria-label="Send">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+            </div>
+          </section>
+
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast -->
+  <div id="toasts" class="toasts"></div>
+
+  <script src="/static/app.js?v=3"></script>
+</body>
+</html>
