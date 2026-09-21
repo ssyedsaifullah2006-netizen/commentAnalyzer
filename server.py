@@ -52,9 +52,11 @@ def get_session(session_id: str) -> dict:
     return sessions[session_id]
 
 # ─── Pydantic Models ────────────────────────────────────────────
+import config
+
 class FetchRequest(BaseModel):
     url: str
-    max_comments: int = 500
+    max_comments: int = config.MAX_COMMENTS_DEFAULT
     session_id: str
 
 class AskRequest(BaseModel):
