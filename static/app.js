@@ -100,15 +100,7 @@ async function run() {
   $('loading-msg').textContent = 'Fetching comments...';
   $('loading-sub').textContent = `Requesting up to ${fmt(maxComments)} comments...`;
 
-  // Progress stages — smoother with target-based interpolation
-  let currentPct = 5;
-  let targetPct = 25;
-  const tick = setInterval(() => {
-    if (currentPct < targetPct) {
-      currentPct = Math.min(currentPct + 1.5, targetPct);
-      $('progress-bar').style.width = currentPct + '%';
-    }
-  }, 300);
+
 
   // Simple fast progress until real completion
   let currentPct = 5;
